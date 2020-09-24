@@ -10,12 +10,16 @@ val TAG = "myTag"
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
         val tcpWifiCommand = TcpWifiCommand()
         length(tcpWifiCommand)
         tcpWifiCommand.tcpWifiSend()
-        tcpWifiCommand.tcpWifiReceiver()
+        tcpWifiCommand.tcpWifiReceiverModeWifiParameter()
+
         updatData(tcpWifiCommand)
+        tcpWifiCommand.tcpWifiReceiverMode5()
+    //    tcpWifiCommand.tcpWifiReceiverParser()
     }
 
     fun length(tcpWifiCommand: TcpWifiCommand) {

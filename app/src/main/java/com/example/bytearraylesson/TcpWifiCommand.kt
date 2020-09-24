@@ -253,6 +253,58 @@ class TcpWifiCommand {
 
     }
 
+    //  mode1 - Connection Status
+    fun tcpWifiReceiverModeConnectioStatus() {
+        var rDataByteArray = ByteArray(1024)    // 收到的資料, 它會告訴我幾筆
+        rDataByteArray.set(0, 0x55)
+        rDataByteArray.set(1, 0xfe - 256)
+        rDataByteArray.set(2, 0x04)
+        rDataByteArray.set(3, 0xff - 256)
+        rDataByteArray.set(4, 0x02)
+        rDataByteArray.set(5, 0x00)
+        rDataByteArray.set(6, 0x01)
+        rDataByteArray.set(7, 0x04)
+        rDataByteArray.set(8, 0x90 - 256)
+
+        val size = 9
+        val rDataIntArray = ArrayList<Int>()
+
+        // Byte -> Int
+        for (i in 0..size - 1) { //先知道nubBytes的數字再去讀
+            if (rDataByteArray[i].toInt() >= 0) {
+                rDataIntArray.add(rDataByteArray[i].toString().toInt())
+            } else { //負數處理
+                rDataIntArray.add(256 + rDataByteArray[i].toInt())
+            }
+        }
+        //--------基本過濾  --------------
+        if (rDataIntArray.contains(0x55) && rDataIntArray.contains(0xfe) && rDataIntArray.contains(
+                0xff
+            ) && rDataIntArray.contains(0x90) && size >= 9
+        ) {
+            val x = rDataIntArray.indexOf(0x55)   // 取到初值
+            if (rDataIntArray[x + 1] == 0xFe && rDataIntArray[x + 3] == 0xff) {
+                if (x + rDataIntArray[x + 2] + 5 <= size && rDataIntArray[x + 4] == rDataIntArray[x + 2] - 2)
+                    if (rDataIntArray[x + rDataIntArray[x + 2] + 5 - 1] == 0x90) {
+                        //判斷cs 是否正確(範例:8f)
+                        var y = 0
+                        for (i in x + 1..rDataIntArray[x + 2] + 2) {
+                            y = y + rDataIntArray[i]
+                            //                   Log.d(TAG, "i,$i: ${rDataIntArray[i]} = , y: $y")
+                        }
+
+                        var z = y.toString(16)
+                        var k = z.subSequence(z.length - 2, z.length)
+                        Log.d(TAG, "k: $k")
+// 處理
+                        if (rDataIntArray[x + 5] == 0x00 && rDataIntArray[x + 6] == 0x01) {
+                            Log.d(TAG, "tcpWifiReceiverMode1: I am pass")
+                        }
+                    } else Log.d(TAG, "tcpWifiReceiverMode1: I am fail")
+            }
+        }
+    }        //end
+
 
     /*     接收
     Ex: totol 118byte, 71hex = 113 , 113+1(本身）+1（55)+1(fe)+1(cs)+1(end)
@@ -271,7 +323,8 @@ DA 1A F9 57 68 01 0C 53 70 6f
 
 
   */
-    fun tcpWifiReceiver() {
+    // mode2_1 - WifiParameter
+    fun tcpWifiReceiverModeWifiParameter() {
         var rDataByteArray = ByteArray(1024)    // 收到的資料, 它會告訴我幾筆
         //  55 FE 71 FE 6F 00 31 37 38 88
         rDataByteArray.set(0, 0x55)
@@ -429,7 +482,7 @@ DA 1A F9 57 68 01 0C 53 70 6f
             //基本通過就可以開始解析了
             val x = rDataIntArray.indexOf(0x55)
             if (rDataIntArray[x + 1] == 0xfe && rDataIntArray[x + 3] == 0xFE) {
-                if (x + rDataIntArray[x + 2] + 5 >= size && rDataIntArray[x + 4] == rDataIntArray[x + 2] - 2) {
+                if (x + rDataIntArray[x + 2] + 5 <= size && rDataIntArray[x + 4] == rDataIntArray[x + 2] - 2) {
                     Log.d(TAG, "parser1: Found ： ${x + rDataIntArray[x + 2] + 5 - 1}")
                     if (rDataIntArray[x + rDataIntArray[x + 2] + 5 - 1] == 0x90) {
                         //判斷cs 是否正確(範例:8f)
@@ -444,7 +497,10 @@ DA 1A F9 57 68 01 0C 53 70 6f
                         Log.d(TAG, "k: $k")
 
                         /*所有判斷均完成, 搬到對應的尺寸   */
-                        Log.d(TAG, "90: ${rDataIntArray[x + rDataIntArray[x + 2] + 5 - 1]} ")
+                        Log.d(
+                            TAG,
+                            "90: ${rDataIntArray[x + rDataIntArray[x + 2] + 5 - 1]} "
+                        )
 
                         val b1 = rDataIntArray.listIterator(x + 6)
                         //  sendType = rDataIntArray[x+5]
@@ -507,15 +563,15 @@ DA 1A F9 57 68 01 0C 53 70 6f
                         }
                         Log.d(TAG, "eapUserPassword: $eapUserPassword")
 
-                        for (i in 0..3){
-                             sgIP.add(b1.next())
+                        for (i in 0..3) {
+                            sgIP.add(b1.next())
                         }
-                           Log.d(TAG, "sgIP: $sgIP")
+                        Log.d(TAG, "sgIP: $sgIP")
 
-                           for (i in 0..6){              
-                                serialNumber.add(b1.next())
-                           }
-                               Log.d(TAG, "serialNumber: $serialNumber")
+                        for (i in 0..6) {
+                            serialNumber.add(b1.next())
+                        }
+                        Log.d(TAG, "serialNumber: $serialNumber")
                     }    //    90end
                 }
 
@@ -543,7 +599,239 @@ DA 1A F9 57 68 01 0C 53 70 6f
 
     }
 
-    //  val commandHeadIndex1 = rDataByteArray.indexOf(90)
-    //  Log.d(TAG, "receiver: $commandHeadIndex1")
+    // keey Alive
+    fun tcpWifiReceiverMode3() {
+        var rDataByteArray = ByteArray(1024)    // 收到的資料, 它會告訴我幾筆
+        rDataByteArray.set(0, 0x55)
+        rDataByteArray.set(1, 0xfe - 256)
+        rDataByteArray.set(2, 0x04)
+        rDataByteArray.set(3, 0xfd - 256)
+        rDataByteArray.set(4, 0x02)
+        rDataByteArray.set(5, 0x00)
+        rDataByteArray.set(6, 0x00)
+        rDataByteArray.set(7, 0x02)
+        rDataByteArray.set(8, 0x90 - 256)
 
-}
+        val size = 9
+        val rDataIntArray = ArrayList<Int>()
+
+        // Byte -> Int
+        for (i in 0..size - 1) { //先知道nubBytes的數字再去讀
+            if (rDataByteArray[i].toInt() >= 0) {
+                rDataIntArray.add(rDataByteArray[i].toString().toInt())
+            } else { //負數處理
+                rDataIntArray.add(256 + rDataByteArray[i].toInt())
+            }
+        }
+        //--------基本過濾  --------------
+        if (rDataIntArray.contains(0x55) && rDataIntArray.contains(0xfe) && rDataIntArray.contains(
+                0xfd
+            ) && rDataIntArray.contains(0x90) && size >= 9
+        ) {
+            val x = rDataIntArray.indexOf(0x55)   // 取到初值
+            if (rDataIntArray[x + 1] == 0xFe && rDataIntArray[x + 3] == 0xfd) {
+                if (x + rDataIntArray[x + 2] + 5 <= size && rDataIntArray[x + 4] == rDataIntArray[x + 2] - 2)
+                    if (rDataIntArray[x + rDataIntArray[x + 2] + 5 - 1] == 0x90) {
+                        //判斷cs 是否正確(範例:8f)
+                        var y = 0
+                        for (i in x + 1..rDataIntArray[x + 2] + 2) {
+                            y = y + rDataIntArray[i]
+                            //                   Log.d(TAG, "i,$i: ${rDataIntArray[i]} = , y: $y")
+                        }
+
+                        var z = y.toString(16)
+                        var k = z.subSequence(z.length - 2, z.length)
+                        Log.d(TAG, "k: $k")
+// 解析成功後之處理流程在此
+                        if (rDataIntArray[x + 5] == 0x00)  //有個值會變要和你送的順序有關
+                        {
+                            Log.d(TAG, "tcpWifiReceiverMode3: I am pass")
+                        }
+                    } else Log.d(TAG, "tcpWifiReceiverMode3: I am fail")
+            }
+        }
+    }  // fun end
+
+    // ------  Reset Reuest mode 4
+    fun tcpWifiReceiverMode4() {
+        var rDataByteArray = ByteArray(1024)    // 收到的資料, 它會告訴我幾筆
+        rDataByteArray.set(0, 0x55)
+        rDataByteArray.set(1, 0xfe - 256)
+        rDataByteArray.set(2, 0x03)
+        rDataByteArray.set(3, 0xfc - 256)
+        rDataByteArray.set(4, 0x01)
+        rDataByteArray.set(5, 0xfe - 256)
+        rDataByteArray.set(6, 0xfc - 256)
+        rDataByteArray.set(7, 0x90 - 256)
+
+
+        val size = 8
+        val rDataIntArray = ArrayList<Int>()
+
+        // Byte -> Int
+        for (i in 0..size - 1) { //先知道nubBytes的數字再去讀
+            if (rDataByteArray[i].toInt() >= 0) {
+                rDataIntArray.add(rDataByteArray[i].toString().toInt())
+            } else { //負數處理
+                rDataIntArray.add(256 + rDataByteArray[i].toInt())
+            }
+        }
+        //--------基本過濾  --------------
+        if (rDataIntArray.contains(0x55) && rDataIntArray.contains(0xfe) && rDataIntArray.contains(
+                0xfc
+            ) && rDataIntArray.contains(0x90) && size >= 8
+        ) {
+            val x = rDataIntArray.indexOf(0x55)   // 取到初值
+            if (rDataIntArray[x + 1] == 0xFe && rDataIntArray[x + 3] == 0xfc) {
+                if (x + rDataIntArray[x + 2] + 5 <= size && rDataIntArray[x + 4] == rDataIntArray[x + 2] - 2)
+                    if (rDataIntArray[x + rDataIntArray[x + 2] + 5 - 1] == 0x90) {
+                        //判斷cs 是否正確(範例:8f)
+                        var y = 0
+                        for (i in x + 1..rDataIntArray[x + 2] + 2) {
+                            y = y + rDataIntArray[i]
+                            //                   Log.d(TAG, "i,$i: ${rDataIntArray[i]} = , y: $y")
+                        }
+
+                        var z = y.toString(16)
+                        var k = z.subSequence(z.length - 2, z.length)
+                        Log.d(TAG, "k: $k")
+// 解析成功後之處理流程在此
+                        if (rDataIntArray[x + 5] == 0xfe)  //有個值會變要和你送的順序有關
+                        {
+                            Log.d(TAG, "tcpWifiReceiverMode4: I am pass")
+                        }
+                    } else Log.d(TAG, "tcpWifiReceiverMode4: I am fail")
+            }
+        }
+    }  // fun end
+
+
+    //mode2_2
+// ------  wifi-parameter mode 5
+    fun tcpWifiReceiverMode5() {
+        var rDataByteArray = ByteArray(1024)    // 收到的資料, 它會告訴我幾筆
+        rDataByteArray.set(0, 0x55)
+        rDataByteArray.set(1, 0xfe - 256)
+        rDataByteArray.set(2, 0x03)
+        rDataByteArray.set(3, 0xfe - 256)
+        rDataByteArray.set(4, 0x01)
+        rDataByteArray.set(5, 0x90 - 256)     //client cs
+        rDataByteArray.set(6, 0x90 - 256)     //cs
+        rDataByteArray.set(7, 0x90 - 256)
+        Log.d(TAG, "tcpWifiReceiverMode5: HI i am mode5")
+
+        val size = 8
+        val rDataIntArray = ArrayList<Int>()
+
+        // Byte -> Int
+        for (i in 0..size - 1) { //先知道nubBytes的數字再去讀
+            if (rDataByteArray[i].toInt() >= 0) {
+                rDataIntArray.add(rDataByteArray[i].toString().toInt())
+            } else { //負數處理
+                rDataIntArray.add(256 + rDataByteArray[i].toInt())
+            }
+        }
+        //--------基本過濾  --------------
+        /*  val comandHeadFilterValue = 0x55
+          val protocolFilterValue = 0xfe
+          val operationFilterValue = 0Xfe
+          val commandEndFilterValue = 0x55 */
+
+        if (rDataIntArray.contains(0x55) && rDataIntArray.contains(0xfe) && rDataIntArray.contains(
+                0xfe
+            ) && rDataIntArray.contains(0x90) && size >= 8
+        ) {
+            val x = rDataIntArray.indexOf(0x55)   // 取到初值
+            if (rDataIntArray[x + 1] == 0xFe && rDataIntArray[x + 3] == 0xfe) {
+                if (x + rDataIntArray[x + 2] + 5 <= size && rDataIntArray[x + 4] == rDataIntArray[x + 2] - 2)
+                    if (rDataIntArray[x + rDataIntArray[x + 2] + 5 - 1] == 0x90) {
+                        //判斷cs 是否正確(範例90)
+                        var y = 0
+                        for (i in x + 1..rDataIntArray[x + 2] + 2) {
+                            y = y + rDataIntArray[i]
+                            //                   Log.d(TAG, "i,$i: ${rDataIntArray[i]} = , y: $y")
+                        }
+
+                        var z = y.toString(16)
+                        var k = z.subSequence(z.length - 2, z.length)
+                        Log.d(TAG, "k: $k")
+// 解析成功後之處理流程在此
+                        if (rDataIntArray[x + 5] == 0x90)  //有個值會變要和你送的順序有關
+                        {
+                            Log.d(TAG, "tcpWifiReceiverMode5: I am pass")
+                        }
+                    } else Log.d(TAG, "tcpWifiReceiverMode5: I am fail")
+            }
+        }
+    }  // fun end
+
+
+    //mode2_2
+/* ------  Parser Function
+* return true = suceessful
+* return false = fail
+ */
+
+    fun tcpWifiReceiverParser(
+        rDataByteArray: ByteArray,
+        size: Int,
+        protocolFilterValue: Int,
+        operationFilterValue: Int
+    ): Boolean {
+        var retureState = false
+        val rDataIntArray = ArrayList<Int>()
+
+        // Byte -> Int
+        for (i in 0..size - 1) { //先知道nubBytes的數字再去讀
+            if (rDataByteArray[i].toInt() >= 0) {
+                rDataIntArray.add(rDataByteArray[i].toString().toInt())
+            } else { //負數處理
+                rDataIntArray.add(256 + rDataByteArray[i].toInt())
+            }
+        }
+        //--------基本過濾  --------------
+        /*  val comandHeadFilterValue = 0x55
+          val protocolFilterValue = 0xfe
+          val operationFilterValue = 0Xfe
+          val commandEndFilterValue = 0x55 */
+
+        if (rDataIntArray.contains(0x55) && rDataIntArray.contains(0xfe) && rDataIntArray.contains(
+                0xfe
+            ) && rDataIntArray.contains(0x90) && size >= 8
+        ) {
+            val x = rDataIntArray.indexOf(0x55)   // 取到初值
+            if (rDataIntArray[x + 1] == 0xFe && rDataIntArray[x + 3] == 0xfe) {
+                if (x + rDataIntArray[x + 2] + 5 <= size && rDataIntArray[x + 4] == rDataIntArray[x + 2] - 2)
+                    if (rDataIntArray[x + rDataIntArray[x + 2] + 5 - 1] == 0x90) {
+                        //判斷cs 是否正確(範例90)
+                        var y = 0
+                        for (i in x + 1..rDataIntArray[x + 2] + 2) {
+                            y = y + rDataIntArray[i]
+                            //                   Log.d(TAG, "i,$i: ${rDataIntArray[i]} = , y: $y")
+                        }
+
+                        var z = y.toString(16)
+                        var k = z.subSequence(z.length - 2, z.length)
+                        Log.d(TAG, "k: $k")
+// 解析成功後之處理流程在此
+                        if (rDataIntArray[x + 5] == 0x90)  //有個值會變要和你送的順序有關
+                        {
+                            Log.d(TAG, "tcpWifiReceiverMode5: I am pass")
+                            retureState = true
+                        }
+                    } else {
+                        Log.d(TAG, "tcpWifiReceiverMode5: I am fail")
+                        retureState = false
+                    }
+            }
+
+            }
+        return retureState
+    }  // fun end
+
+
+}  // class end
+
+//  val commandHeadIndex1 = rDataByteArray.indexOf(90)
+//  Log.d(TAG, "receiver: $commandHeadIndex1")
+
