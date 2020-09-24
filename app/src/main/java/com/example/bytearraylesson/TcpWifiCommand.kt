@@ -304,7 +304,7 @@ DA 1A F9 57 68 01 0C 53 70 6f
         rDataByteArray.set(25, 0x74)
         rDataByteArray.set(26, 0x5f)
         rDataByteArray.set(27, 0x31)
-        rDataByteArray.set(28, 0x30)
+        rDataByteArray.set(28, 0x30)     //?
         rDataByteArray.set(29, 0x12)
         //  73 70 6f 72 74 73 61 72 74 30
         rDataByteArray.set(30, 0x73)
@@ -325,7 +325,7 @@ DA 1A F9 57 68 01 0C 53 70 6f
         rDataByteArray.set(44, 0x30)
         rDataByteArray.set(45, 0x38)
         rDataByteArray.set(46, 0x38)
-        rDataByteArray.set(47, 0x38)
+        rDataByteArray.set(47, 0x38)   //?
         rDataByteArray.set(48, 0x01)
         rDataByteArray.set(49, 0x0f)
 //53 70 6f 72 74 73 41 72 74 5f
@@ -442,6 +442,7 @@ DA 1A F9 57 68 01 0C 53 70 6f
                         var k = z.subSequence(z.length - 2, z.length)
 
                         Log.d(TAG, "k: $k")
+
                         /*所有判斷均完成, 搬到對應的尺寸   */
                         Log.d(TAG, "90: ${rDataIntArray[x + rDataIntArray[x + 2] + 5 - 1]} ")
 
@@ -451,6 +452,7 @@ DA 1A F9 57 68 01 0C 53 70 6f
                         for (i in 0..2) {               // Wifi version
                             wifiVersion.add(b1.next())
                         }
+
                         Log.d(TAG, "wifiVersion: ${wifiVersion}")
                         macAddress.clear()
                         for (i in 0..5) {               //MAC Adadres

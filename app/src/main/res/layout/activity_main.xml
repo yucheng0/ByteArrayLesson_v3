@@ -10,6 +10,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+<TextView
+    android:id="@+id/textViewSgIp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/textViewSerialNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+
 
         <EditText
             android:id="@+id/editTextSsid_2_4G"
@@ -42,7 +52,7 @@
             android:layout_height="wrap_content"/>
 
         <EditText
-            android:id="@+id/editTextEapPassword"
+            android:id="@+id/editTextEapUserPassword"
             android:text="sa.eap063840888"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>

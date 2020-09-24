@@ -11,10 +11,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-         val tcpWifiCommand = TcpWifiCommand()
+        val tcpWifiCommand = TcpWifiCommand()
         length(tcpWifiCommand)
         tcpWifiCommand.tcpWifiSend()
         tcpWifiCommand.tcpWifiReceiver()
+        updatData(tcpWifiCommand)
     }
 
     fun length(tcpWifiCommand: TcpWifiCommand) {
@@ -23,15 +24,15 @@ class MainActivity : AppCompatActivity() {
         tcpWifiCommand.ssid_5GLength = editTextSsid_5G.text.toString().length
         tcpWifiCommand.password_5GLength = editTextPassword_5G.text.toString().length
         tcpWifiCommand.eapUserIdLength = editTextEapUserId.text.toString().length
-        tcpWifiCommand.eapUserPasswordLength = editTextEapPassword.text.toString().length
+        tcpWifiCommand.eapUserPasswordLength = editTextEapUserPassword.text.toString().length
 
 //        Log.d(TAG, "tcpWifiCommand.ssid_2_4GLength:${tcpWifiCommand.ssid_2_4GLength} ")
- //       Log.d(TAG, "tcpWifiCommand.password_2_4GLength:${tcpWifiCommand.password_2_4GLength} ")
-  //      Log.d(TAG, "tcpWifiCommand.ssid_5GLength:${tcpWifiCommand.ssid_5GLength} ")
+        //       Log.d(TAG, "tcpWifiCommand.password_2_4GLength:${tcpWifiCommand.password_2_4GLength} ")
+        //      Log.d(TAG, "tcpWifiCommand.ssid_5GLength:${tcpWifiCommand.ssid_5GLength} ")
 
-   //     Log.d(TAG, " tcpWifiCommand.password_5GLength:${tcpWifiCommand.password_5GLength} ")
-   //     Log.d(TAG, "tcpWifiCommand.eapUserIdLength:${tcpWifiCommand.eapUserIdLength} ")
-   //     Log.d(TAG, "tcpWifiCommand.eapUserPasswordLength:${tcpWifiCommand.eapUserPasswordLength} ")
+        //     Log.d(TAG, " tcpWifiCommand.password_5GLength:${tcpWifiCommand.password_5GLength} ")
+        //     Log.d(TAG, "tcpWifiCommand.eapUserIdLength:${tcpWifiCommand.eapUserIdLength} ")
+        //     Log.d(TAG, "tcpWifiCommand.eapUserPasswordLength:${tcpWifiCommand.eapUserPasswordLength} ")
 
         //資料段的長度 111
         tcpWifiCommand.operationLength =
@@ -58,7 +59,7 @@ class MainActivity : AppCompatActivity() {
                     7      // Serial Number
 
         Log.d(TAG, "operationLength: ${tcpWifiCommand.operationLength} ")
-         tcpWifiCommand.protocolLength =tcpWifiCommand.operationLength+2
+        tcpWifiCommand.protocolLength = tcpWifiCommand.operationLength + 2
         Log.d(TAG, "protocolLength: ${tcpWifiCommand.protocolLength}")
 
         //cs 是算出來的
@@ -70,6 +71,90 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    fun updatData(tcpWifiCommand: TcpWifiCommand) {
+        //
+        var s = ""
+        for (i in 0..tcpWifiCommand.ssid_2_4GLength - 1) {
+            val s1 = tcpWifiCommand.ssid_2_4G[i].toChar()
+            s = s + s1
+        }
+        Log.d(TAG, "ssid_2.4g: $s")
+        editTextSsid_2_4G.setText(s)
 
+//--------------- password 2.4 G ---------------
+        s = ""
+        for (i in 0..tcpWifiCommand.password_2_4GLength - 1) {
+            val s1 = tcpWifiCommand.password_2_4G[i].toChar()
+            s = s + s1
+        }
+        Log.d(TAG, "password2.4g: $s")
+        editTextPassword_2_4G.setText(s)
+
+//------------ ssid 5g ------------------
+        s = ""
+        for (i in 0..tcpWifiCommand.ssid_5GLength - 1) {
+            val s1 = tcpWifiCommand.ssid_5G[i].toChar()
+            s = s + s1
+        }
+        Log.d(TAG, "ssid_5g: $s")
+        editTextSsid_5G.setText(s)
+
+
+//---------------password 5g---------
+        s = ""
+        for (i in 0..tcpWifiCommand.password_5GLength - 1) {
+            val s1 = tcpWifiCommand.password_5G[i].toChar()
+            s = s + s1
+        }
+        Log.d(TAG, "password_5g: $s")
+        editTextPassword_5G.setText(s)
+
+// ---- eap method ---------
+        tcpWifiCommand.eapMethod
+
+        //  --- eap inner method  ---------
+        tcpWifiCommand.eapInnerMethod
+
+        //---------------eap user id---------
+        s = ""
+        for (i in 0..tcpWifiCommand.eapUserIdLength - 1) {
+            val s1 = tcpWifiCommand.eapUserId[i].toChar()
+            s = s + s1
+        }
+        Log.d(TAG, "eapuserid $s")
+        editTextEapUserId.setText(s)
+
+        //---------------eap user password---------
+        s = ""
+        for (i in 0..tcpWifiCommand.eapUserPasswordLength - 1) {
+            val s1 = tcpWifiCommand.eapUserPassword[i].toChar()
+            s = s + s1
+        }
+        Log.d(TAG, "eapuserpassword $s")
+        editTextEapUserPassword.setText(s)
+
+        //---------------SGIP---------
+        s = ""
+        for (i in 0..3) {                       //非字元, 它是數值
+            val s1 = tcpWifiCommand.sgIP[i]
+            if (i != 3 ) {
+            s = s + s1.toString()+"."  }             //處理後面多了點
+            else s = s+ s1.toString()               // 不要點
+
+        }
+        Log.d(TAG, "sgip $s")
+        textViewSgIp.setText(s)
+
+        //---------------Serial Numbe---------
+        s = ""
+        for (i in 0..6) {
+            val s1 = tcpWifiCommand.serialNumber[i].toChar()
+            s = s + s1
+        }
+        Log.d(TAG, "serialNumber $s")
+        textViewSerialNumber.setText(s)
+
+
+    }
 
 }
